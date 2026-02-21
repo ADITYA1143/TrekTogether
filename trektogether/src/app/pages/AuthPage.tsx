@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Mountain, Mail, Lock, User } from 'lucide-react';
+import { loginUser, registerUser } from "../../api/auth";
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -9,11 +10,34 @@ export default function AuthPage() {
     password: '',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Handle authentication
-    alert(isLogin ? 'Logged in successfully!' : 'Account created successfully!');
-  };
+ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+
+  try {
+    if (isLogin) {
+      const res = await loginUser({
+        email: formData.email,
+        password: formData.password,
+      });
+
+      localStorage.setItem("token", res.data.token);
+      alert("Logged in successfully");
+    } else {
+      await registerUser({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+      });
+
+      alert("Account created successfully. Please login.");
+      setIsLogin(true);
+    }
+
+    setFormData({ name: "", email: "", password: "" });
+  } catch (err: any) {
+    alert(err.response?.data?.message || "Something went wrong");
+  }
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-900 via-emerald-800 to-emerald-900 flex items-center justify-center p-4">
@@ -33,17 +57,15 @@ export default function AuthPage() {
           <div className="flex gap-2 mb-8 bg-stone-100 rounded-xl p-1">
             <button
               onClick={() => setIsLogin(true)}
-              className={`flex-1 py-2.5 rounded-lg transition-all ${
-                isLogin ? 'bg-white text-emerald-700 shadow-sm' : 'text-stone-600'
-              }`}
+              className={`flex-1 py-2.5 rounded-lg transition-all ${isLogin ? 'bg-white text-emerald-700 shadow-sm' : 'text-stone-600'
+                }`}
             >
               Login
             </button>
             <button
               onClick={() => setIsLogin(false)}
-              className={`flex-1 py-2.5 rounded-lg transition-all ${
-                !isLogin ? 'bg-white text-emerald-700 shadow-sm' : 'text-stone-600'
-              }`}
+              className={`flex-1 py-2.5 rounded-lg transition-all ${!isLogin ? 'bg-white text-emerald-700 shadow-sm' : 'text-stone-600'
+                }`}
             >
               Register
             </button>
@@ -121,7 +143,7 @@ export default function AuthPage() {
           {/* Disclaimer */}
           {!isLogin && (
             <p className="text-xs text-stone-500 text-center mt-6 leading-relaxed">
-              By creating an account, you agree to our Terms of Service and acknowledge our Privacy Policy. 
+              By creating an account, you agree to our Terms of Service and acknowledge our Privacy Policy.
               TrekTogether is not responsible for collecting or securing sensitive personal information.
             </p>
           )}
