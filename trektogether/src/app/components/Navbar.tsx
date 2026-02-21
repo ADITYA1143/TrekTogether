@@ -1,8 +1,12 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Mountain, User, Bell } from 'lucide-react';
+import { Mountain, User, Bell, LogOut, UserCircle } from 'lucide-react';
+import { useState } from 'react';
+import { useAuth } from '../hooks/useAuth';
 
 export default function Navbar() {
   const location = useLocation();
+  const { isAuthenticated, user, logout } = useAuth();
+  const [showDropdown, setShowDropdown] = useState(false);
   
   const isActive = (path: string) => location.pathname === path;
   
@@ -74,17 +78,64 @@ export default function Navbar() {
           
           {/* Right side actions */}
           <div className="flex items-center gap-3">
-            <button className="relative p-2 rounded-lg text-stone-700 hover:bg-stone-100 transition-colors">
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-emerald-600 rounded-full"></span>
-            </button>
-            <Link
-              to="/auth"
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors shadow-sm hover:shadow-md"
-            >
-              <User className="w-5 h-5" />
-              <span className="hidden sm:inline">Profile</span>
-            </Link>
+            {isAuthenticated && (
+              <button className="relative p-2 rounded-lg text-stone-700 hover:bg-stone-100 transition-colors">
+                <Bell className="w-5 h-5" />
+                <span className="absolute top-1 right-1 w-2 h-2 bg-emerald-600 rounded-full"></span>
+              </button>
+            )}
+            
+            {isAuthenticated ? (
+              <div className="relative">
+                <button
+                  onClick={() => setShowDropdown(!showDropdown)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors shadow-sm hover:shadow-md"
+                >
+                  <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center text-xs font-bold">
+                    {user?.name.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="hidden sm:inline">{user?.name}</span>
+                </button>
+
+                {/* Dropdown Menu */}
+                {showDropdown && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-10"
+                      onClick={() => setShowDropdown(false)}
+                    />
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-stone-200 py-2 z-20">
+                      <Link
+                        to="/profile"
+                        onClick={() => setShowDropdown(false)}
+                        className="flex items-center gap-3 px-4 py-2 text-stone-700 hover:bg-stone-50 transition-colors"
+                      >
+                        <UserCircle className="w-4 h-4" />
+                        <span>Profile</span>
+                      </Link>
+                      <button
+                        onClick={() => {
+                          setShowDropdown(false);
+                          logout();
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        <span>Logout</span>
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            ) : (
+              <Link
+                to="/login"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors shadow-sm hover:shadow-md"
+              >
+                <User className="w-5 h-5" />
+                <span className="hidden sm:inline">Login</span>
+              </Link>
+            )}
           </div>
         </div>
       </div>
