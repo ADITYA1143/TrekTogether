@@ -2,14 +2,17 @@ import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-// REGISTER
+// ================= REGISTER =================
 export const registerUser = async (req, res) => {
-  const { name, email, password } = req.body;
-  if (!name || !email || !password) {
-    return res.status(400).json({ message: "All fields are required" });
-  }
-
   try {
+    console.log("REGISTER BODY:", req.body);
+
+    const { name, email, password } = req.body;
+
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({ message: "User already exists" });
@@ -32,24 +35,41 @@ export const registerUser = async (req, res) => {
         email: user.email,
       },
     });
+
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("REGISTER ERROR:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
-// LOGIN
+// ================= LOGIN =================
 export const loginUser = async (req, res) => {
-  const { email, password } = req.body;
-
   try {
+    console.log("LOGIN BODY:", req.body);
+
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password required" });
+    }
+
     const user = await User.findOne({ email });
+    console.log("FOUND USER:", user);
+
     if (!user) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
+    console.log("PASSWORD MATCH:", isMatch);
+
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials" });
+    }
+
+    if (!process.env.JWT_SECRET) {
+      console.error("JWT_SECRET is missing!");
+      return res.status(500).json({ message: "JWT configuration error" });
     }
 
     const token = jwt.sign(
@@ -67,7 +87,9 @@ export const loginUser = async (req, res) => {
         email: user.email,
       },
     });
+
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("LOGIN ERROR:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
