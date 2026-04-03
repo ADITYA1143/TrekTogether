@@ -6,10 +6,10 @@ import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 
 dotenv.config();
-connectDB();
 
 const app = express();
 
+// Middleware
 app.use(
   cors({
     origin: function (origin, callback) {
@@ -27,13 +27,30 @@ app.use(
     credentials: true,
   })
 );
+
 app.use(express.json());
 
+// Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 
-const PORT = process.env.PORT || 5000;
-console.log("✅ userRoutes loaded");
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-});
+// ✅ START SERVER ONLY AFTER DB CONNECTS
+const startServer = async () => {
+  try {
+    await connectDB(); // ⬅️ THIS IS THE FIX
+
+    console.log("✅ userRoutes loaded");
+
+    const PORT = process.env.PORT || 5000;
+
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+    });
+
+  } catch (error) {
+    console.error("❌ Failed to start server:", error);
+    process.exit(1);
+  }
+};
+
+startServer();
